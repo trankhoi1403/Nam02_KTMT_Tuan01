@@ -1,32 +1,191 @@
-# Prerequisites
-*.d
+/*
+		Trần Khôi - 1660281
+		16CK2 - ĐH KHTN - CNTT
+*/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+#include <iostream>
+#include <string>
+#include <xstring>
+#include <cmath>
+#include <conio.h>
+#include <Windows.h>
+using namespace std;
 
-# Precompiled Headers
-*.gch
-*.pch
+// Hàm làm mờ nút phóng to, thu nhỏ, tác dụng để cố định màn hình console
+void FixConsoleWindow(){
+	HWND consoleWindow = GetConsoleWindow();
+	LONG style = GetWindowLong(consoleWindow, GWL_STYLE);
+	style = style&~(WS_MAXIMIZEBOX)&~(WS_THICKFRAME);
+	SetWindowLong(consoleWindow, GWL_STYLE, style);
+}
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+void ResizeConsole(int width, int height)
+{
+	HWND console = GetConsoleWindow();
+	RECT r;
+	GetWindowRect(console, &r);
+	MoveWindow(console, r.left, r.top, width, height, TRUE);
+}
 
-# Fortran module files
-*.mod
-*.smod
+// Dịch chuyển con trỏ vẽ tới 1 vị trí tọa độ (x, y)
+void GotoXY(int x, int y){
+	COORD coord;
+	coord.X = x;
+	coord.Y = y;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+//	Hệ X (X > 10) => Hệ 10
+int XtoDec(string x, int coso){
+	int dec = 0;
+	for (int i = 0, luythua = x.length() - 1; i < (int)x.length(); i++, luythua--){
+		int num = (int)x[i];
+		//		vì khi ép kiểu num = (int)x[i] thì x[i] == 0 <=> num == 48, x[i] == 1 <=> num == 49, ...
 
-# Executables
-*.exe
-*.out
-*.app
+		if (num >= 65 && num <= 122){
+			for (int i = 65; i <= 90; i++){
+				if (num == i || num == i + 32){
+					num = i - 7;
+					break;
+				}
+			}
+		}
+		dec += (num - 48)*(int)pow(coso, luythua);
+	}
+	return dec;
+}
+
+// Hệ 10 => Hệ X (X > 10)
+string DectoX(int x, int coso){
+	string a = "                    ";		// 20 dấu khoảng trắng
+	int i = a.length() - 1;
+	while (x != 0){
+		a[i] = x % coso + 48;
+		if (a[i] >= 58){
+			a[i] += 7;
+		}
+		x /= coso;
+		i--;
+	}
+	a.erase(0, i + 1);
+	return a;
+}
+
+// Hệ X sang Hệ Y với x, y <= 10
+int XtoY(int x, int c1, int c2){
+	if (c1 == c2)
+		return x;
+	int kq = 0, temp = 1;
+	while (x != 0){
+		kq += (x % c2)*temp;
+		temp *= c1;
+		x /= c2;
+	}
+	return kq;
+}
+
+string itos(int a){
+	string kq = "                    ";
+	for (int i = kq.length() - 1; a != 0; i--){
+		kq[i] = a % 10 + 48;					// chuyển int thành số có thể hiển thị ra được
+		a /= 10;
+	}
+	int i;
+	for (i = 0; kq[i] == ' '; i++);
+	kq.erase(0, i);
+	return kq;
+}
+
+//	kiểm tra xem chuỗi có đúng với cơ số đó hay không
+bool check(string str, int coso){
+	if (coso<2 || coso>36)
+		return false;
+	int n = str.length();
+	if (coso <= 10){
+		for (int i = 0; i < n; i++){
+			if (str[i] < 48 || str[i] >= coso + 48)
+				return false;
+		}
+	}
+	else{
+		for (int i = 0; i < n; i++){
+			if (str[i] < 48 || str[i] >= coso + 48 && str[i] < 65 || str[i] >= coso + 48 + 7 && str[i] < 97 || str[i] >= coso + 48 + 7 + 32)
+				return false;
+		}
+	}
+	return true;
+}
+
+string Tranform(string str, int coso1, int coso2){
+	string kq = "                     ";
+	if (coso1 < 2 || coso2 < 2)
+		return "Co so khong duoc phep nho hon 2";
+	if (coso1 > 36 || coso2 > 36)
+		return "Co so khong duoc phep lon hon 36";
+	if (coso1 <= 10){
+		int a = stoi(str);		// nếu nhỏ hơn 10 thì chuyển hóa nó thành kiểu int
+		if (coso2 <= 10)
+			return itos(XtoY(XtoY(a, coso1, 10), 10, coso2));
+		else
+			return DectoX(XtoY(a, coso1, 10), coso2);
+	}
+	else{
+		if (coso2 <= 10)
+			return itos(XtoY(XtoDec(str, coso1), 10, coso2));
+		else
+			return DectoX(XtoDec(str, coso1), coso2);
+	}
+}
+
+int main(){
+	ResizeConsole(700, 450);
+	FixConsoleWindow();
+
+	string x;
+	int a, b;
+khoideptrai:
+
+	cout << "Tran Khoi - 1660281\n16CK2 - DH KHTN - CNTT";
+	cout << "\n\n\t\t>>>\tTRINH CHUYEN DOI HE CO SO A -> B\t<<<";
+	cout << "\n\t\t   Trong he co so 2 -> 36 || So nguyen 8 bit";
+
+	do{
+		cout << "\n\nNhap gia tri chuyen doi : ";
+		cin >> x;
+
+		do{
+			cout << "Tu co so A : ";
+			cin >> a;
+		} while ((a > 36 || a < 2) && cout << "\nChu y: 2 <= A, B <= 36, Xin nhap lai : ");
+	} while (check(x, a) == 0 && cout << "\nGia tri " << x << " khong nam trong He " << a << ", Xin nhap lai : ");
+
+	do{
+		cout << "Sang Co so B : ";
+		cin >> b;
+	} while ((b > 36 || b < 2) && cout << "\nChu y: 2 <= A, B <= 36, Xin nhap lai : ");
+
+	cout << endl << "\t\t";
+
+	cout << x << "*(He " << a << ") = " << Tranform(x, a, b) << "*(He " << b << ")" << endl;
+
+	cout << "\nPress any key to coutinue or ESC to exit ... \n";
+
+	while (1){
+		char key = toupper(_getch());
+		if (key == 27){
+			break;
+		}
+		else{
+			system("cls");
+			goto khoideptrai;
+		}
+	}
+	system("cls");
+	GotoXY(31, 11);
+	cout << "Tran Khoi - 1660281";
+	GotoXY(30, 12);
+	cout << "16CK2 - DH KHTN - CNTT";
+	GotoXY(0, 25);
+	_getch();
+	return 0;
+}
